@@ -1,0 +1,11 @@
+<%- include('./partials/header.ejs') %>
+<body>
+   <form method="POST" action="/upload" enctype="multipart/form-data" > 
+    <input type="file" name="receipt" >
+    <button type="submit">Scan Receipt</button>
+   </form>
+
+</body>
+</html>
+
+<%- include('./partials/footer.ejs') %>
