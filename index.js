@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import multer from "multer";
 import axios from "axios";
+import stockRouter from "./routes/stock.js";
+import historyRouter from "./routes/history.js";
 
 // console.log("Key loaded:", Boolean(process.env.XAI_API_KEY));
 
@@ -16,11 +18,28 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.get("/", async (req, res) => {
   try {
     //   res.send('Hello World!');
-    res.render("index.ejs");
+    res.render("index.ejs", {
+      Vendor: "",
+      Total: "",
+      Items: [],
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send("cannot get");
   }
+});
+
+
+app.get("/sales", (req, res) => {
+  res.render("sales.ejs");
+});
+
+app.get("/history", (req, res) => {
+  res.render("history.ejs");
+});
+
+app.get("/stock", (req, res) => {
+  res.render("stock.ejs");
 });
 
 app.post("/upload", upload.single("receipt"), async (req, res) => {
@@ -53,14 +72,21 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       (item) => item.type === "message",
     );
     const answer = message.content[0].text;
-    console.log(answer);
-    res.send("Received");
+    const parsedAnswer = JSON.parse(answer);
+
+    // console.log(parsedAnswer.total);
+    // console.log(parsedAnswer.items);
+
+    res.render("index.ejs", {
+      Vendor: parsedAnswer.vendor,
+      Total: parsedAnswer.total,
+      Items: parsedAnswer.items,
+    });
   } catch (error) {
     console.log(error.response?.data);
   }
 });
 
-
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
