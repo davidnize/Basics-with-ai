@@ -2,8 +2,6 @@ import "dotenv/config";
 import express from "express";
 import multer from "multer";
 import axios from "axios";
-import stockRouter from "./routes/stock.js";
-import historyRouter from "./routes/history.js";
 
 // console.log("Key loaded:", Boolean(process.env.XAI_API_KEY));
 
