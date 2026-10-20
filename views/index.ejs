@@ -1,11 +1,46 @@
 <%- include('./partials/header.ejs') %>
-<body>
-   <form method="POST" action="/upload" enctype="multipart/form-data" > 
-    <input type="file" name="receipt" >
-    <button type="submit">Scan Receipt</button>
-   </form>
+   <main>
+      <div class="action-grid">
+         <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label class="drop">
+               <span class="drop-icon">📁</span>
+               <p>Upload Receipt</p>
+               <input type="file" name="receipt" accept="image/jpeg,image/png" hidden onchange="this.form.submit()">
+            </label>
+         </form>
 
-</body>
-</html>
+         <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label class="drop">
+               <span class="drop-icon">📷</span>
+               <p>Take Photo</p>
+               <input type="file" name="receipt" accept="image/jpeg,image/png" capture="environment" required hidden
+                  onchange="this.form.submit()">
 
-<%- include('./partials/footer.ejs') %>
+            </label>
+         </form>
+      </div>
+
+
+
+      <p><strong>Vendor:</strong>
+         <%= Vendor || '—' %>
+      </p>
+      <p><strong>Total:</strong>
+         <%= Total || '—' %>
+      </p>
+      <p><strong>Items:</strong></p>
+      <ul>
+         <% if (Items && Items.length) { %>
+            <% Items.forEach((item)=> { %>
+               <li><span>
+                     <%= item.name %>
+                  </span> <span>
+                     <%= item.price %>
+                  </span></li>
+               <% }); %>
+
+                  <% } %>
+      </ul>
+   </main>
+
+   <%- include('./partials/footer.ejs') %>
