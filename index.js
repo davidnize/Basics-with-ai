@@ -187,12 +187,16 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       error: "",
     });
   } catch (error) {
-    console.error("Receipt scanning error:", error.message);
+    console.error(
+        "Receipt scanning failed:",
+        error.response?.status,
+        error.response?.data || error.message
+    );
 
-    renderSalesError(
-      res,
-      "We could not read that receipt. Try a clearer image.",
-      502,
+    return renderSalesError(
+        res,
+        "We could not read that receipt. Check the server logs.",
+        502
     );
   }
 });
