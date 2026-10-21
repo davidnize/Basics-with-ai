@@ -344,11 +344,12 @@ app.get("/stock", async (req, res, next) => {
     }).length;
 
     res.render("routes/stock.ejs", {
-      activePage: "stock",
-      batches,
-      attentionCount,
-      formError: "",
-    });
+  activePage: "stock",
+  batches,
+  attentionCount,
+  formError: "",
+  formValues: {},
+});
   } catch (error) {
     next(error);
   }
