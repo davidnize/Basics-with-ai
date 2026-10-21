@@ -1,0 +1,38 @@
+<%- include('./partials/header.ejs', { pageTitle: "AI Retail Ledger | Run your shop with confidence" }) %>
+<main class="landing-page">
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">A calmer way to run your shop</span>
+      <h1>Know your stock. Track your sales. Grow with confidence.</h1>
+      <p class="hero-text">AI Retail Ledger gives small shops and local vendors one simple place to record sales, scan receipts, manage stock, and understand daily profit.</p>
+      <div class="hero-actions"><a class="button" href="/sign-up">Create a free account <span aria-hidden="true">→</span></a><a class="button button-secondary" href="/login">Log in</a></div>
+      <p class="trust-note">Designed for phones, busy days, and real-world shop work.</p>
+    </div>
+    <div class="hero-card" aria-label="Application preview">
+      <div class="preview-topline"><span>Today at your shop</span><span class="status-dot">● Offline ready</span></div>
+      <div class="preview-total"><span>Daily profit</span><strong>ZMW 1,240.00</strong></div>
+      <div class="preview-row"><span>Sales recorded</span><strong>18</strong></div>
+      <div class="preview-row"><span>Stock alerts</span><strong class="warning">3 items</strong></div>
+      <div class="preview-row"><span>Next action</span><strong>Sell oldest stock first</strong></div>
+      <div class="preview-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+  <section class="section-block" id="features">
+    <div class="section-heading"><span class="eyebrow">Everything important, together</span><h2>Less paperwork. Better decisions.</h2></div>
+    <div class="feature-grid">
+      <article class="feature-card"><span class="feature-icon">📸</span><h3>Record sales quickly</h3><p>Scan a receipt or add a sale manually without slowing down your day.</p></article>
+      <article class="feature-card"><span class="feature-icon">📦</span><h3>Manage stock smarter</h3><p>See quantities, expiry dates, and which products should be sold first.</p></article>
+      <article class="feature-card"><span class="feature-icon">📈</span><h3>Understand your profit</h3><p>Compare income and expenses through simple, readable summaries.</p></article>
+    </div>
+  </section>
+  <section class="how-section section-block" id="how-it-works">
+    <div class="section-heading"><span class="eyebrow">How it works</span><h2>Start small and stay in control.</h2></div>
+    <div class="steps">
+      <div class="step"><span>01</span><div><h3>Record</h3><p>Add your sales and supplier receipts as you work.</p></div></div>
+      <div class="step"><span>02</span><div><h3>Organize</h3><p>Keep stock batches and history in one accessible place.</p></div></div>
+      <div class="step"><span>03</span><div><h3>Improve</h3><p>Use clear profit and stock signals to plan your next move.</p></div></div>
+    </div>
+  </section>
+  <section class="cta-banner"><div><h2>Ready to make your ledger easier?</h2><p>Bring your daily shop routine into one clear workspace.</p></div><a class="button button-light" href="/sign-up">Get started</a></section>
+</main>
+<%- include('./partials/footer.ejs') %>

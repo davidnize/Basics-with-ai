@@ -1,0 +1,59 @@
+<%- include('../partials/header.ejs', { pageTitle: "Stock | AI Retail Ledger" }) %>
+<%
+  const values = formValues || {};
+  const today = new Date().toISOString().slice(0, 10);
+  const formatDate = (value) => value
+    ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : "No expiry";
+%>
+<main class="app-page">
+  <section class="page-heading">
+    <div><span class="eyebrow">Inventory control</span><h1>Stock & FIFO alerts</h1><p>Know what is available and what should move first.</p></div>
+    <% if (currentUser && attentionCount > 0) { %><span class="page-badge page-badge-warning"><%= attentionCount %> item<%= attentionCount === 1 ? "" : "s" %> need attention</span><% } %>
+  </section>
+
+  <% if (formError) { %><div class="alert alert-error" role="alert"><%= formError %></div><% } %>
+
+  <section class="metric-grid">
+    <div class="metric-card"><span>Total products</span><strong><%= batches.length %></strong></div>
+    <div class="metric-card"><span>Low stock</span><strong><%= batches.filter((batch) => Number(batch.quantity) <= 5).length %></strong></div>
+    <div class="metric-card"><span>Expiring soon</span><strong><%= batches.filter((batch) => batch.expiresAt && Math.ceil((new Date(batch.expiresAt) - new Date()) / 86400000) <= 7).length %></strong></div>
+  </section>
+
+  <section class="content-card">
+    <div class="card-heading"><div><h2>Add stock batch</h2><p>Record supply details once, then use FIFO recommendations to reduce waste.</p></div></div>
+    <% if (currentUser) { %>
+      <form class="stock-form" action="/stock" method="post">
+        <label>Product name<input name="productName" value="<%= values.productName || '' %>" placeholder="e.g. Milk" required></label>
+        <label>Supplier<input name="supplier" value="<%= values.supplier || '' %>" placeholder="Supplier name"></label>
+        <label>Quantity<input name="quantity" type="number" min="0.001" step="0.001" value="<%= values.quantity || '' %>" required></label>
+        <label>Unit<select name="unit"><option value="piece">Piece</option><option value="box">Box</option><option value="kg">Kilogram</option><option value="litre">Litre</option></select></label>
+        <label>Purchase price<input name="purchasePrice" type="number" min="0" step="0.01" value="<%= values.purchasePrice || '' %>" placeholder="0.00"></label>
+        <label>Selling price<input name="sellingPrice" type="number" min="0" step="0.01" value="<%= values.sellingPrice || '' %>" placeholder="0.00"></label>
+        <label>Supply date<input name="suppliedAt" type="date" value="<%= values.suppliedAt || today %>" required></label>
+        <label>Expiry date <span class="optional">(optional)</span><input name="expiresAt" type="date" value="<%= values.expiresAt || '' %>"></label>
+        <button class="button stock-submit" type="submit">Add stock batch</button>
+      </form>
+    <% } else { %>
+      <div class="empty-state">Log in to add and manage stock batches.</div>
+    <% } %>
+  </section>
+
+  <section class="content-card">
+    <div class="card-heading"><div><h2>Stock batches</h2><p>Oldest supply appears first for FIFO selling.</p></div></div>
+    <% if (batches.length) { %>
+      <div class="stock-list">
+        <% batches.forEach((batch, index) => { %>
+          <article class="stock-entry">
+            <div><strong><%= batch.productName %></strong><span><%= batch.quantity %> <%= batch.unit %> · <%= batch.supplier || "No supplier" %></span></div>
+            <div><span>Supplied <%= formatDate(batch.suppliedAt) %></span><span>Expiry <%= formatDate(batch.expiresAt) %></span></div>
+            <% if (index === 0) { %><span class="stock-action">Sell first</span><% } %>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state empty-state-large"><span>📦</span><strong>No stock batches yet</strong><p>Add your first batch to start tracking quantity, supplier, and expiry dates.</p></div>
+    <% } %>
+  </section>
+</main>
+<%- include('../partials/footer.ejs') %>

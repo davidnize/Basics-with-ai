@@ -1,0 +1,18 @@
+<%- include('../partials/header.ejs', { pageTitle: "Sign up | AI Retail Ledger" }) %>
+<main class="auth-page">
+  <section class="auth-card">
+    <span class="eyebrow">Start simply</span>
+    <h1>Create your account</h1>
+    <p>Set up your workspace and keep your shop records in one place.</p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <% if (success) { %><div class="alert alert-success" role="status"><%= success %> <a href="/login">Log in now</a>.</div><% } %>
+    <form class="auth-form" action="/sign-up" method="post">
+      <label>Your name<input type="text" name="name" value="<%= name || '' %>" autocomplete="name" required></label>
+      <label>Email address<input type="email" name="email" value="<%= email || '' %>" autocomplete="email" required></label>
+      <label>Password<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="button" type="submit">Create account</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+  </section>
+</main>
+<%- include('../partials/footer.ejs') %>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI Retail Ledger helps small shops track sales, stock, expenses, and profit." />
+    <link rel="stylesheet" href="/main.css" />
+    <title><%= pageTitle || "AI Retail Ledger" %></title>
+  </head>
+  <body>
+    <header>
+      <div class="site-header">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">🛒</span>
+          <span><strong>AI Retail Ledger</strong><small>Simple tools for smarter shops</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <% if (currentUser) { %>
+            <a class="<%= activePage === 'sales' ? 'active' : '' %>" href="/sales">Sales</a>
+            <a class="<%= activePage === 'stock' ? 'active' : '' %>" href="/stock">Stock</a>
+            <a class="<%= activePage === 'history' ? 'active' : '' %>" href="/history">History</a>
+            <span class="nav-user">Hi, <%= currentUser.name %></span>
+            <form class="logout-form" action="/logout" method="post"><button class="nav-logout" type="submit">Log out</button></form>
+          <% } else if (activePage === "home") { %>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+          <% } else { %>
+            <a class="<%= activePage === 'sales' ? 'active' : '' %>" href="/sales">Sales</a>
+            <a class="<%= activePage === 'stock' ? 'active' : '' %>" href="/stock">Stock</a>
+            <a class="<%= activePage === 'history' ? 'active' : '' %>" href="/history">History</a>
+          <% } %>
+          <% if (!currentUser) { %>
+            <a class="nav-login" href="/login">Log in</a>
+            <a class="button button-small" href="/sign-up">Sign up</a>
+          <% } %>
+        </nav>
+      </div>
+    </header>
