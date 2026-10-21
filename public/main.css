@@ -667,17 +667,6 @@ footer {
 }
 
 @media(max-width:760px) {
-    .site-header {
-        align-items: flex-start
-    }
-
-    .site-nav {
-        gap: 11px;
-        flex-wrap: wrap;
-        justify-content: flex-end
-    }
-
-
     .hero {
         grid-template-columns: 1fr;
         padding: 58px 0
@@ -842,6 +831,24 @@ footer {
 }
 
 @media(max-width:760px) {
+    .stock-form {
+        grid-template-columns: 1fr
+    }
+
+    .stock-submit {
+        width: 100%
+    }
+
+    .stock-entry {
+        grid-template-columns: 1fr
+    }
+
+    .stock-action {
+        justify-self: start
+    }
+}
+
+@media(max-width:760px) {
     .site-header {
         flex-wrap: wrap;
         align-items: center;
@@ -850,8 +857,21 @@ footer {
 
     .site-nav {
         width: 100%;
-        gap: 14px;
+        gap: 8px 14px;
         flex-wrap: wrap;
-        justify-content: flex-start
+        justify-content: space-between;
+        font-size: .85rem
+    }
+
+    .nav-login {
+        margin-left: 0
+    }
+
+    .nav-user {
+        display: none
+    }
+
+    .site-nav .button-small {
+        padding: 7px 14px
     }
 }
