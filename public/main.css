@@ -677,9 +677,6 @@ footer {
         justify-content: flex-end
     }
 
-    .site-nav a:not(.button):not(.nav-login) {
-        display: none
-    }
 
     .hero {
         grid-template-columns: 1fr;
