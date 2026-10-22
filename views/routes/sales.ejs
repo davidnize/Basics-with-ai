@@ -6,6 +6,28 @@
     <form action="/upload" method="POST" enctype="multipart/form-data"><label class="drop"><span class="drop-icon">📁</span><strong>Upload receipt</strong><small>JPG or PNG image</small><input type="file" name="receipt" accept="image/jpeg,image/png" hidden required onchange="this.form.submit()"></label></form>
     <form action="/upload" method="POST" enctype="multipart/form-data"><label class="drop drop-camera"><span class="drop-icon">📷</span><strong>Take a photo</strong><small>Use your device camera</small><input type="file" name="receipt" accept="image/jpeg,image/png" capture="environment" hidden required onchange="this.form.submit()"></label></form>
   </div></section>
-  <section class="result-grid"><div class="content-card summary-card"><span class="card-label">Supplier / vendor</span><strong><%= Vendor || "—" %></strong><span class="card-label">Receipt total</span><strong class="total-value"><%= Total || "—" %></strong><% if (Vendor || Total || (Items && Items.length)) { %><form action="/sales/save" method="post" class="save-form"><input type="hidden" name="vendor" value="<%= Vendor || '' %>"><input type="hidden" name="total" value="<%= Total || '' %>"><input type="hidden" name="items" value="<%= JSON.stringify(Items || []) %>"><button class="button save-button" type="submit">Save scanned receipt</button></form><% } %></div><div class="content-card"><div class="card-heading"><div><h2>Items found</h2><p>Review the scanned line items before saving.</p></div></div><% if (Items && Items.length) { %><ul class="item-list"><% Items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= item.price %></strong></li><% }); %></ul><% } else { %><div class="empty-state">Your scanned items will appear here.</div><% } %></div></section>
+  <section class="result-grid">
+    <div class="content-card summary-card">
+      <% const taxValue = locals.Tax || ""; %>
+      <span class="card-label">Supplier / vendor</span>
+      <strong><%= Vendor || "—" %></strong>
+      <% if (taxValue) { %>
+        <span class="card-label">Tax</span>
+        <strong><%= taxValue %></strong>
+      <% } %>
+      <span class="card-label">Receipt total</span>
+      <strong class="total-value"><%= Total || "—" %></strong>
+      <% if (Vendor || Total || (Items && Items.length)) { %>
+        <form action="/sales/save" method="post" class="save-form">
+          <input type="hidden" name="vendor" value="<%= Vendor || '' %>">
+          <input type="hidden" name="total" value="<%= Total || '' %>">
+          <input type="hidden" name="tax" value="<%= taxValue %>">
+          <input type="hidden" name="items" value="<%= JSON.stringify(Items || []) %>">
+          <button class="button save-button" type="submit">Save scanned receipt</button>
+        </form>
+      <% } %>
+    </div>
+    <div class="content-card"><div class="card-heading"><div><h2>Items found</h2><p>Review the scanned line items before saving.</p></div></div><% if (Items && Items.length) { %><ul class="item-list"><% Items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= item.price %></strong></li><% }); %></ul><% } else { %><div class="empty-state">Your scanned items will appear here.</div><% } %></div>
+  </section>
 </main>
 <%- include('../partials/footer.ejs') %>
