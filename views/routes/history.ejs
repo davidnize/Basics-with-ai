@@ -42,6 +42,34 @@
             <summary><%= receipt.items.length %> item(s)</summary>
             <ul class="item-list"><% receipt.items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= money(item.price, receipt.currency) %></strong></li><% }) %></ul>
           </details>
+          <details class="edit-box">
+            <summary class="button button-small">Edit</summary>
+            <form class="stock-form" action="/history/<%= receipt.id %>/edit" method="post">
+              <label>Vendor<input name="vendor" value="<%= receipt.vendor || '' %>"></label>
+              <label>Currency
+                <select name="currency">
+                  <% currencies.forEach((c) => { %>
+                    <option value="<%= c.code %>" <%= c.code === receipt.currency ? "selected" : "" %>><%= c.code %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>Tax<input name="tax" inputmode="decimal" value="<%= receipt.tax ?? '' %>"></label>
+              <label>Total<input name="total" inputmode="decimal" value="<%= receipt.total ?? '' %>"></label>
+              <% receipt.items.forEach((item) => { %>
+                <label>Item<input name="itemName" value="<%= item.name %>"></label>
+                <label>Price<input name="itemPrice" inputmode="decimal" value="<%= item.price ?? '' %>"></label>
+              <% }) %>
+              <label>New item<input name="itemName"></label>
+              <label>Price<input name="itemPrice" inputmode="decimal"></label>
+              <p class="stock-submit">To remove an item, clear its name.</p>
+              <button class="button stock-submit" type="submit">Save changes</button>
+            </form>
+          </details>
+          <div class="entry-buttons">
+            <form action="/history/<%= receipt.id %>/delete" method="post" onsubmit="return confirm('Delete this receipt and all its items?')">
+              <button class="button button-small button-danger" type="submit">Delete</button>
+            </form>
+          </div>
         </article>
       <% }) %>
     </div>

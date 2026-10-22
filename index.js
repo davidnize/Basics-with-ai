@@ -12,9 +12,15 @@ import {
   createSession,
   deleteSession,
   createReceipt,
-  listReceiptsByUser,
+    listReceiptsByUser,
+  findReceipt,
+  updateReceipt,
+  deleteReceipt,
   createStockBatch,
   listStockBatchesByUser,
+  findStockBatch,
+  updateStockBatch,
+  deleteStockBatch,
   closeDatabase,
 } from "./db.js";
 
@@ -39,6 +45,32 @@ const CURRENCIES = [
 app.locals.currencies = CURRENCIES;
 app.locals.defaultCurrency = DEFAULT_CURRENCY;
 
+// Units a shop can pick for a stock batch.
+// "value" is saved in the database, "label" is shown in the dropdown.
+const UNITS = [
+  { value: "piece", label: "Piece" },
+  { value: "pack", label: "Pack" },
+  { value: "box", label: "Box" },
+  { value: "carton", label: "Carton" },
+  { value: "crate", label: "Crate" },
+  { value: "dozen", label: "Dozen" },
+  { value: "bag", label: "Bag" },
+  { value: "sack", label: "Sack" },
+  { value: "bottle", label: "Bottle" },
+  { value: "can", label: "Can" },
+  { value: "tin", label: "Tin" },
+  { value: "sachet", label: "Sachet" },
+  { value: "tray", label: "Tray" },
+  { value: "bundle", label: "Bundle" },
+  { value: "roll", label: "Roll" },
+  { value: "kg", label: "Kilogram (kg)" },
+  { value: "g", label: "Gram (g)" },
+  { value: "litre", label: "Litre (L)" },
+  { value: "ml", label: "Millilitre (ml)" },
+  { value: "metre", label: "Metre (m)" },
+];
+
+app.locals.units = UNITS;
 // Formats a number like "K1,234.50" or "$83.45". Empty or invalid values show "—".
 app.locals.money = (value, currencyCode) => {
   if (value === "" || value === null || value === undefined) return "—";
@@ -470,6 +502,9 @@ app.post("/stock", requireLogin, async (req, res, next) => {
     });
   }
 
+  // Only accept units from our own list.
+  const safeUnit = UNITS.some((item) => item.value === unit) ? unit : "piece";
+
   try {
     await createStockBatch({
       id: crypto.randomUUID(),
@@ -477,7 +512,7 @@ app.post("/stock", requireLogin, async (req, res, next) => {
       productName: productName.trim(),
       supplier: supplier.trim(),
       quantity: Number(quantity),
-      unit,
+      unit: safeUnit,
       purchasePrice,
       sellingPrice,
       suppliedAt,
@@ -490,10 +525,60 @@ app.post("/stock", requireLogin, async (req, res, next) => {
   }
 });
 
+// Save the edited stock batch.
+app.post("/stock/:id/edit", requireLogin, async (req, res, next) => {
+  const {
+    productName = "",
+    supplier = "",
+    quantity = "",
+    unit = "piece",
+    purchasePrice = "",
+    sellingPrice = "",
+    suppliedAt = "",
+    expiresAt = "",
+  } = req.body;
+
+  // Missing values: go back to the stock page without saving.
+  if (!productName.trim() || Number(quantity) <= 0 || !suppliedAt) {
+    return res.redirect("/stock");
+  }
+
+  // Only accept units from our own list.
+  const safeUnit = UNITS.some((item) => item.value === unit) ? unit : "piece";
+
+  try {
+    await updateStockBatch({
+      id: req.params.id,
+      userId: res.locals.currentUser.user_id,
+      productName: productName.trim(),
+      supplier: supplier.trim(),
+      quantity: Number(quantity),
+      unit: safeUnit,
+      purchasePrice,
+      sellingPrice,
+      suppliedAt,
+      expiresAt,
+    });
+
+    res.redirect("/stock");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete one stock batch (only if it belongs to the logged-in user).
+app.post("/stock/:id/delete", requireLogin, async (req, res, next) => {
+  try {
+    await deleteStockBatch(req.params.id, res.locals.currentUser.user_id);
+    res.redirect("/stock");
+  } catch (error) {
+    next(error);
+  }
+});
+
 // --------------------
 // History
 // --------------------
-
 app.get("/history", async (req, res, next) => {
   try {
     const receipts = res.locals.currentUser
@@ -504,6 +589,57 @@ app.get("/history", async (req, res, next) => {
       activePage: "history",
       receipts,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Save the edited receipt and its items.
+app.post("/history/:id/edit", requireLogin, async (req, res, next) => {
+  try {
+    const {
+      vendor = "",
+      total = "",
+      tax = "",
+      currency = DEFAULT_CURRENCY,
+    } = req.body;
+
+    const safeCurrency = CURRENCIES.some((item) => item.code === currency)
+      ? currency
+      : DEFAULT_CURRENCY;
+
+    const names = [].concat(req.body.itemName ?? []);
+    const prices = [].concat(req.body.itemPrice ?? []);
+
+    const receiptItems = names
+      .map((name, index) => ({
+        id: crypto.randomUUID(),
+        name: String(name).trim(),
+        price: toMoney(prices[index]),
+      }))
+      .filter((item) => item.name); // a blank name removes the item
+
+    await updateReceipt({
+      id: req.params.id,
+      userId: res.locals.currentUser.user_id,
+      vendor: vendor.trim(),
+      total: toMoney(total),
+      tax: toMoney(tax),
+      currency: safeCurrency,
+      items: receiptItems,
+    });
+
+    res.redirect("/history");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete a saved receipt and its items.
+app.post("/history/:id/delete", requireLogin, async (req, res, next) => {
+  try {
+    await deleteReceipt(req.params.id, res.locals.currentUser.user_id);
+    res.redirect("/history");
   } catch (error) {
     next(error);
   }
@@ -680,11 +816,9 @@ app.post("/logout", async (req, res, next) => {
       await deleteSession(sessionId);
     }
 
-   const secureFlag = process.env.NODE_ENV === "production" ? "; Secure" : "";
-
     res.setHeader(
       "Set-Cookie",
-      `session=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${secureFlag}`,
+      "session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
     );
 
     res.redirect("/");

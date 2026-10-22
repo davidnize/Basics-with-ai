@@ -5,6 +5,8 @@
   const formatDate = (value) => value
     ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : "No expiry";
+  // Date boxes need dates like 2026-10-22 (the Swedish "sv-SE" format looks like that).
+  const inputDate = (value) => value ? new Date(value).toLocaleDateString("sv-SE") : "";
 %>
 <main class="app-page">
   <section class="page-heading">
@@ -27,7 +29,13 @@
         <label>Product name<input name="productName" value="<%= values.productName || '' %>" placeholder="e.g. Milk" required></label>
         <label>Supplier<input name="supplier" value="<%= values.supplier || '' %>" placeholder="Supplier name"></label>
         <label>Quantity<input name="quantity" type="number" min="0.001" step="0.001" value="<%= values.quantity || '' %>" required></label>
-        <label>Unit<select name="unit"><option value="piece">Piece</option><option value="box">Box</option><option value="kg">Kilogram</option><option value="litre">Litre</option></select></label>
+        <label>Unit
+          <select name="unit">
+            <% units.forEach((u) => { %>
+              <option value="<%= u.value %>" <%= u.value === (values.unit || "piece") ? "selected" : "" %>><%= u.label %></option>
+            <% }) %>
+          </select>
+        </label>
         <label>Purchase price<input name="purchasePrice" type="number" min="0" step="0.01" value="<%= values.purchasePrice || '' %>" placeholder="0.00"></label>
         <label>Selling price<input name="sellingPrice" type="number" min="0" step="0.01" value="<%= values.sellingPrice || '' %>" placeholder="0.00"></label>
         <label>Supply date<input name="suppliedAt" type="date" value="<%= values.suppliedAt || today %>" required></label>
@@ -47,7 +55,32 @@
           <article class="stock-entry">
             <div><strong><%= batch.productName %></strong><span><%= batch.quantity %> <%= batch.unit %> · <%= batch.supplier || "No supplier" %></span></div>
             <div><span>Supplied <%= formatDate(batch.suppliedAt) %></span><span>Expiry <%= formatDate(batch.expiresAt) %></span></div>
-            <% if (index === 0) { %><span class="stock-action">Sell first</span><% } %>
+            <span class="stock-action"><%= index === 0 ? "Sell first" : "" %></span>
+            <div class="entry-buttons">
+              <form action="/stock/<%= batch.id %>/delete" method="post" onsubmit="return confirm('Delete this stock batch?')">
+                <button class="button button-small button-danger" type="submit">Delete</button>
+              </form>
+            </div>
+            <details class="edit-box">
+              <summary class="button button-small">Edit</summary>
+              <form class="stock-form" action="/stock/<%= batch.id %>/edit" method="post">
+                <label>Product name<input name="productName" value="<%= batch.productName %>" required></label>
+                <label>Supplier<input name="supplier" value="<%= batch.supplier || '' %>"></label>
+                <label>Quantity<input name="quantity" type="number" min="0.001" step="0.001" value="<%= batch.quantity %>" required></label>
+                <label>Unit
+                  <select name="unit">
+                    <% units.forEach((u) => { %>
+                      <option value="<%= u.value %>" <%= u.value === batch.unit ? "selected" : "" %>><%= u.label %></option>
+                    <% }) %>
+                  </select>
+                </label>
+                <label>Purchase price<input name="purchasePrice" type="number" min="0" step="0.01" value="<%= batch.purchasePrice || '' %>"></label>
+                <label>Selling price<input name="sellingPrice" type="number" min="0" step="0.01" value="<%= batch.sellingPrice || '' %>"></label>
+                <label>Supply date<input name="suppliedAt" type="date" value="<%= inputDate(batch.suppliedAt) %>" required></label>
+                <label>Expiry date<input name="expiresAt" type="date" value="<%= inputDate(batch.expiresAt) %>"></label>
+                <button class="button stock-submit" type="submit">Save changes</button>
+              </form>
+            </details>
           </article>
         <% }) %>
       </div>

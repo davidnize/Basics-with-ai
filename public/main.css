@@ -808,7 +808,7 @@ footer {
     border-radius: 12px;
     padding: 16px;
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 110px auto;
     align-items: center;
     gap: 16px
 }
@@ -830,6 +830,58 @@ footer {
     letter-spacing: .06em
 }
 
+/* Save / Cancel row on the edit pages */
+.form-buttons {
+    grid-column: 1/-1;
+    display: flex;
+    gap: 10px
+}
+
+/* Edit form that opens inside a stock card or receipt */
+.edit-box {
+    grid-column: 1/-1
+}
+
+.edit-box summary {
+    width: fit-content;
+    border: 1px solid var(--line);
+    list-style: none
+}
+
+.edit-box form {
+    margin-top: 12px
+}
+
+/* Edit / Delete buttons on stock cards and history receipts */
+.stock-entry .entry-buttons,
+.history-entry .entry-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.history-entry .entry-buttons {
+    grid-column: 1/-1
+}
+
+.entry-buttons .button-small {
+    border: 1px solid var(--line);
+    color: var(--green-900)
+}
+
+.entry-buttons .button-small:hover {
+    background: #f1f5f4
+}
+
+.entry-buttons .button-danger {
+    color: #991b1b;
+    border-color: #fecaca
+}
+
+.entry-buttons .button-danger:hover {
+    background: #fef2f2
+}
+
 @media(max-width:760px) {
     .stock-form {
         grid-template-columns: 1fr
@@ -845,6 +897,10 @@ footer {
 
     .stock-action {
         justify-self: start
+    }
+
+    .stock-action:empty {
+        display: none
     }
 }
 
