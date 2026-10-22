@@ -116,7 +116,6 @@ app.get("/sales", (req, res) => {
   });
 });
 
-
 // Upload receipt and ask Gemini to read it.
 app.post("/upload", upload.single("receipt"), async (req, res) => {
   try {
@@ -147,8 +146,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
                 },
               },
               {
-                    text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
-  
+                text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
               },
             ],
           },
@@ -182,9 +180,9 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       .trim();
 
     const receipt = JSON.parse(cleanText);
-        console.log("Parsed receipt:", receipt);
+    console.log("Parsed receipt:", receipt);
 
-       res.render("routes/sales.ejs", {
+    res.render("routes/sales.ejs", {
       activePage: "sales",
       Vendor: receipt.vendor || "",
       Total: receipt.total ?? "",
@@ -207,90 +205,90 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
   }
 });
 // Upload receipt and ask Grok to read it.
-// app.post("/upload", upload.single("receipt"), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return renderSalesError(res, "Please choose a receipt image.");
-//     }
+app.post("/upload", upload.single("receipt"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return renderSalesError(res, "Please choose a receipt image.");
+    }
 
-//     if (!process.env.XAI_API_KEY) {
-//       return renderSalesError(
-//         res,
-//         "XAI_API_KEY is missing from your .env file.",
-//         503,
-//       );
-//     }
+    if (!process.env.XAI_API_KEY) {
+      return renderSalesError(
+        res,
+        "XAI_API_KEY is missing from your .env file.",
+        503,
+      );
+    }
 
-//     const image = req.file.buffer.toString("base64");
-//     const imageUrl = `data:${req.file.mimetype};base64,${image}`;
+    const image = req.file.buffer.toString("base64");
+    const imageUrl = `data:${req.file.mimetype};base64,${image}`;
 
-//     const response = await axios.post(
-//       "https://api.x.ai/v1/responses",
-//       {
-//         model: "grok-4.7",
-//         input: [
-//           {
-//             role: "user",
-//             content: [
-//               {
-//                 type: "input_image",
-//                 image_url: imageUrl,
-//               },
-//               {
-//                 type: "input_text",
-//                                 text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
-//               },
-//             ],
-//           },
-//         ],
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-//           "Content-Type": "application/json",
-//         },
-//       },
-//     );
+    const response = await axios.post(
+      "https://api.x.ai/v1/responses",
+      {
+        model: "grok-4.7",
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_image",
+                image_url: imageUrl,
+              },
+              {
+                type: "input_text",
+                text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
-//     const message = response.data.output.find(
-//       (item) => item.type === "message",
-//     );
+    const message = response.data.output.find(
+      (item) => item.type === "message",
+    );
 
-//     const text = message?.content?.[0]?.text;
+    const text = message?.content?.[0]?.text;
 
-//     if (!text) {
-//       throw new Error("Grok returned an empty response.");
-//     }
+    if (!text) {
+      throw new Error("Grok returned an empty response.");
+    }
 
-//     const cleanText = text
-//       .replace(/^```json\s*/i, "")
-//       .replace(/\s*```$/i, "")
-//       .trim();
+    const cleanText = text
+      .replace(/^```json\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
-//     const receipt = JSON.parse(cleanText);
+    const receipt = JSON.parse(cleanText);
 
-//     res.render("routes/sales.ejs", {
-//       activePage: "sales",
-//       Vendor: receipt.vendor || "",
-//       Total: receipt.total ?? "",
-//       Tax: receipt.tax ?? "",
-//       Items: Array.isArray(receipt.items) ? receipt.items : [],
-//       error: "",
-//     });
-//   } catch (error) {
-//     console.error(
-//         "Receipt scanning failed:",
-//         error.response?.status,
-//         error.response?.data || error.message
-//     );
+    res.render("routes/sales.ejs", {
+      activePage: "sales",
+      Vendor: receipt.vendor || "",
+      Total: receipt.total ?? "",
+      Tax: receipt.tax ?? "",
+      Items: Array.isArray(receipt.items) ? receipt.items : [],
+      error: "",
+    });
+  } catch (error) {
+    console.error(
+      "Receipt scanning failed:",
+      error.response?.status,
+      error.response?.data || error.message,
+    );
 
-//     return renderSalesError(
-//         res,
-//         "We could not read that receipt. Check the server logs.",
-//         502
-//     );
-//   }
-// });
+    return renderSalesError(
+      res,
+      "We could not read that receipt. Check the server logs.",
+      502,
+    );
+  }
+});
 
 // Save the scanned receipt.
 app.post("/sales/save", requireLogin, async (req, res, next) => {
@@ -349,12 +347,12 @@ app.get("/stock", async (req, res, next) => {
     }).length;
 
     res.render("routes/stock.ejs", {
-  activePage: "stock",
-  batches,
-  attentionCount,
-  formError: "",
-  formValues: {},
-});
+      activePage: "stock",
+      batches,
+      attentionCount,
+      formError: "",
+      formValues: {},
+    });
   } catch (error) {
     next(error);
   }
@@ -444,11 +442,7 @@ app.get("/sign-up", (req, res) => {
 });
 
 app.post("/sign-up", async (req, res) => {
-  const {
-    name = "",
-    email = "",
-    password = "",
-  } = req.body;
+  const { name = "", email = "", password = "" } = req.body;
 
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -531,10 +525,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const {
-    email = "",
-    password = "",
-  } = req.body;
+  const { email = "", password = "" } = req.body;
 
   const normalizedEmail = email.trim().toLowerCase();
 
