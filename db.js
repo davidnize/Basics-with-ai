@@ -57,9 +57,10 @@ export async function initializeDatabase() {
       selling_price NUMERIC(12, 2),
       supplied_at DATE NOT NULL,
       expires_at DATE
+    );
 
-      );
-      ALTER TABLE receipts ADD COLUMN IF NOT EXISTS tax NUMERIC(12, 2);
+    ALTER TABLE receipts ADD COLUMN IF NOT EXISTS tax NUMERIC(12, 2);
+    ALTER TABLE receipts ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'ZMW';
   `);
 }
 
@@ -116,16 +117,24 @@ export async function deleteSession(sessionId) {
   await pool.query("DELETE FROM sessions WHERE id = $1", [sessionId]);
 }
 
-export async function createReceipt({ id, userId, vendor, total, tax, items }) {
+export async function createReceipt({
+  id,
+  userId,
+  vendor,
+  total,
+  tax,
+  currency,
+  items,
+}) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
     await client.query(
-      `INSERT INTO receipts (id, user_id, vendor, total, tax)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [id, userId, vendor, total || null, tax || null],
+      `INSERT INTO receipts (id, user_id, vendor, total, tax, currency)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [id, userId, vendor, total || null, tax || null, currency || "ZMW"],
     );
 
     for (const item of items) {
@@ -152,6 +161,7 @@ export async function listReceiptsByUser(userId) {
        receipts.vendor,
        receipts.total,
        receipts.tax,
+       receipts.currency,
        receipts.created_at AS "createdAt",
        COALESCE(
          json_agg(
