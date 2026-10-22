@@ -101,6 +101,28 @@ function renderSalesError(res, message, status = 400) {
     error: message,
   });
 }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Retry temporary Gemini errors (busy or rate-limited) a couple of times.
+async function postWithRetry(url, body, config, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await axios.post(url, body, config);
+    } catch (error) {
+      const status = error.response?.status;
+      const canRetry = [429, 500, 503].includes(status);
+
+      if (!canRetry || attempt === attempts) {
+        throw error;
+      }
+
+      console.warn(
+        `Gemini returned ${status}. Retry ${attempt} of ${attempts - 1}...`,
+      );
+      await sleep(attempt * 2000);
+    }
+  }
+}
 
 // --------------------
 // Check the logged-in user
