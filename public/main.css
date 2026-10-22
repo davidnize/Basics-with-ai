@@ -875,3 +875,11 @@ footer {
         padding: 7px 14px
     }
 }
+.currency-select {
+    width: 100%;
+    border: 1px solid #ccd6dc;
+    border-radius: 9px;
+    padding: 11px;
+    background: #fff;
+    margin: 6px 0 12px
+}

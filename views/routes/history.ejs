@@ -1,8 +1,68 @@
 <%- include('../partials/header.ejs', { pageTitle: "History | AI Retail Ledger" }) %>
 <main class="app-page">
+  <%
+    const totalsByCurrency = {};
+    const taxByCurrency = {};
+    receipts.forEach((receipt) => {
+      const code = receipt.currency || defaultCurrency;
+      totalsByCurrency[code] = (totalsByCurrency[code] || 0) + (Number(receipt.total) || 0);
+      taxByCurrency[code] = (taxByCurrency[code] || 0) + (Number(receipt.tax) || 0);
+    });
+    const currencyCodes = Object.keys(totalsByCurrency);
+    const utcText = (value) => new Date(value).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+    const taxNotes = currencyCodes.filter((code) => taxByCurrency[code] > 0).map((code) => money(taxByCurrency[code], code));
+  %>
   <section class="page-heading"><div><span class="eyebrow">Your records</span><h1>History & reports</h1><p>Review sales, expenses, and profit whenever you need them.</p></div><button class="button button-small" type="button">Export CSV</button></section>
   <% if (!currentUser) { %><div class="alert alert-error" role="alert">Log in to view your saved receipts.</div><% } %>
-  <section class="metric-grid"><div class="metric-card"><span>Saved receipts</span><strong><%= receipts.length %></strong></div><div class="metric-card"><span>Total recorded</span><strong><%= receipts.reduce((sum, receipt) => sum + (Number(receipt.total) || 0), 0).toFixed(2) %></strong><% const totalTax = receipts.reduce((sum, receipt) => sum + (Number(receipt.tax) || 0), 0); %><% if (totalTax > 0) { %><span>Includes <%= totalTax.toFixed(2) %> tax</span><% } %></div><div class="metric-card"><span>Latest entry</span><strong><%= receipts.length && receipts[0].createdAt ? new Date(receipts[0].createdAt).toLocaleDateString() : "—" %></strong></div></section>
-  <section class="content-card"><div class="card-heading"><div><h2>Saved receipts</h2><p>Scanned receipts are stored in your account history.</p></div></div><% if (receipts.length) { %><div class="history-list"><% receipts.forEach((receipt) => { %><article class="history-entry"><div><strong><%= receipt.vendor || "Unknown vendor" %></strong><span><%= new Date(receipt.createdAt).toLocaleString() %></span><% if (Number(receipt.tax) > 0) { %><span>Tax: <%= receipt.tax %></span><% } %></div><strong class="history-total"><%= receipt.total || "—" %></strong><details><summary><%= receipt.items.length %> item(s)</summary><ul class="item-list"><% receipt.items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= item.price %></strong></li><% }) %></ul></details></article><% }) %></div><% } else { %><div class="empty-state empty-state-large"><span>🗂️</span><strong>No saved receipts yet</strong><p>Scan a receipt on the Sales page, review it, and select Save scanned receipt.</p></div><% } %></section>
+  <section class="metric-grid">
+    <div class="metric-card"><span>Saved receipts</span><strong><%= receipts.length %></strong></div>
+    <div class="metric-card">
+      <span>Total recorded</span>
+      <% if (currencyCodes.length) { %>
+        <% currencyCodes.forEach((code) => { %><strong><%= money(totalsByCurrency[code], code) %></strong><% }) %>
+      <% } else { %>
+        <strong><%= money(0, defaultCurrency) %></strong>
+      <% } %>
+      <% if (taxNotes.length) { %><span>Includes <%= taxNotes.join(" · ") %> tax</span><% } %>
+    </div>
+    <div class="metric-card"><span>Latest entry</span><strong><% if (receipts.length && receipts[0].createdAt) { %><time class="local-date" datetime="<%= new Date(receipts[0].createdAt).toISOString() %>"><%= utcText(receipts[0].createdAt) %></time><% } else { %>—<% } %></strong></div>
+  </section>
+  <section class="content-card"><div class="card-heading"><div><h2>Saved receipts</h2><p>Scanned receipts are stored in your account history.</p></div></div>
+  <% if (receipts.length) { %>
+    <div class="history-list">
+      <% receipts.forEach((receipt) => { %>
+        <article class="history-entry">
+          <div>
+            <strong><%= receipt.vendor || "Unknown vendor" %></strong>
+            <span><time class="local-time" datetime="<%= new Date(receipt.createdAt).toISOString() %>"><%= utcText(receipt.createdAt) %></time></span>
+            <% if (Number(receipt.tax) > 0) { %><span>Tax: <%= money(receipt.tax, receipt.currency) %></span><% } %>
+          </div>
+          <strong class="history-total"><%= money(receipt.total, receipt.currency) %></strong>
+          <details>
+            <summary><%= receipt.items.length %> item(s)</summary>
+            <ul class="item-list"><% receipt.items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= money(item.price, receipt.currency) %></strong></li><% }) %></ul>
+          </details>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state empty-state-large"><span>🗂️</span><strong>No saved receipts yet</strong><p>Scan a receipt on the Sales page, review it, and select Save scanned receipt.</p></div>
+  <% } %>
+  </section>
 </main>
+<script>
+  // Show every time in the visitor's own timezone, with the timezone name.
+  document.querySelectorAll("time.local-time").forEach(function (el) {
+    var date = new Date(el.getAttribute("datetime"));
+    el.textContent = date.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZoneName: "short",
+    });
+  });
+  document.querySelectorAll("time.local-date").forEach(function (el) {
+    var date = new Date(el.getAttribute("datetime"));
+    el.textContent = date.toLocaleDateString(undefined, { dateStyle: "medium" });
+  });
+</script>
 <%- include('../partials/footer.ejs') %>

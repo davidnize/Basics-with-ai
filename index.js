@@ -26,6 +26,36 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
+const DEFAULT_CURRENCY = "ZMW";
+
+const CURRENCIES = [
+  { code: "ZMW", symbol: "K", name: "Zambian kwacha" },
+  { code: "USD", symbol: "$", name: "US dollar" },
+  { code: "ZAR", symbol: "R", name: "South African rand" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British pound" },
+];
+
+app.locals.currencies = CURRENCIES;
+app.locals.defaultCurrency = DEFAULT_CURRENCY;
+
+// Formats a number like "K1,234.50" or "$83.45". Empty or invalid values show "—".
+app.locals.money = (value, currencyCode) => {
+  if (value === "" || value === null || value === undefined) return "—";
+
+  const number = Number(value);
+  if (Number.isNaN(number)) return "—";
+
+  const currency =
+    CURRENCIES.find((item) => item.code === currencyCode) ||
+    CURRENCIES.find((item) => item.code === DEFAULT_CURRENCY);
+
+  return `${currency.symbol}${number.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
 });
@@ -133,7 +163,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
 
     const image = req.file.buffer.toString("base64");
 
-    const response = await axios.post(
+    const response = await postWithRetry(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       {
         contents: [
@@ -205,95 +235,106 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
   }
 });
 // Upload receipt and ask Grok to read it.
-app.post("/upload", upload.single("receipt"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return renderSalesError(res, "Please choose a receipt image.");
-    }
+// app.post("/upload", upload.single("receipt"), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return renderSalesError(res, "Please choose a receipt image.");
+//     }
 
-    if (!process.env.XAI_API_KEY) {
-      return renderSalesError(
-        res,
-        "XAI_API_KEY is missing from your .env file.",
-        503,
-      );
-    }
+//     if (!process.env.XAI_API_KEY) {
+//       return renderSalesError(
+//         res,
+//         "XAI_API_KEY is missing from your .env file.",
+//         503,
+//       );
+//     }
 
-    const image = req.file.buffer.toString("base64");
-    const imageUrl = `data:${req.file.mimetype};base64,${image}`;
+//     const image = req.file.buffer.toString("base64");
+//     const imageUrl = `data:${req.file.mimetype};base64,${image}`;
 
-    const response = await axios.post(
-      "https://api.x.ai/v1/responses",
-      {
-        model: "grok-4.7",
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_image",
-                image_url: imageUrl,
-              },
-              {
-                type: "input_text",
-                text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+//     const response = await axios.post(
+//       "https://api.x.ai/v1/responses",
+//       {
+//         model: "grok-4.7",
+//         input: [
+//           {
+//             role: "user",
+//             content: [
+//               {
+//                 type: "input_image",
+//                 image_url: imageUrl,
+//               },
+//               {
+//                 type: "input_text",
+//                 text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
+//               },
+//             ],
+//           },
+//         ],
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+//           "Content-Type": "application/json",
+//         },
+//       },
+//     );
 
-    const message = response.data.output.find(
-      (item) => item.type === "message",
-    );
+//     const message = response.data.output.find(
+//       (item) => item.type === "message",
+//     );
 
-    const text = message?.content?.[0]?.text;
+//     const text = message?.content?.[0]?.text;
 
-    if (!text) {
-      throw new Error("Grok returned an empty response.");
-    }
+//     if (!text) {
+//       throw new Error("Grok returned an empty response.");
+//     }
 
-    const cleanText = text
-      .replace(/^```json\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
+//     const cleanText = text
+//       .replace(/^```json\s*/i, "")
+//       .replace(/\s*```$/i, "")
+//       .trim();
 
-    const receipt = JSON.parse(cleanText);
+//     const receipt = JSON.parse(cleanText);
 
-    res.render("routes/sales.ejs", {
-      activePage: "sales",
-      Vendor: receipt.vendor || "",
-      Total: receipt.total ?? "",
-      Tax: receipt.tax ?? "",
-      Items: Array.isArray(receipt.items) ? receipt.items : [],
-      error: "",
-    });
-  } catch (error) {
-    console.error(
-      "Receipt scanning failed:",
-      error.response?.status,
-      error.response?.data || error.message,
-    );
+//     res.render("routes/sales.ejs", {
+//       activePage: "sales",
+//       Vendor: receipt.vendor || "",
+//       Total: receipt.total ?? "",
+//       Tax: receipt.tax ?? "",
+//       Items: Array.isArray(receipt.items) ? receipt.items : [],
+//       error: "",
+//     });
+//   } catch (error) {
+//     console.error(
+//       "Receipt scanning failed:",
+//       error.response?.status,
+//       error.response?.data || error.message,
+//     );
 
-    return renderSalesError(
-      res,
-      "We could not read that receipt. Check the server logs.",
-      502,
-    );
-  }
-});
+//     return renderSalesError(
+//       res,
+//       "We could not read that receipt. Check the server logs.",
+//       502,
+//     );
+//   }
+// });
 
 // Save the scanned receipt.
 app.post("/sales/save", requireLogin, async (req, res, next) => {
   try {
-    const { vendor = "", total = "", tax = "", items = "[]" } = req.body;
+        const {
+      vendor = "",
+      total = "",
+      tax = "",
+      currency = DEFAULT_CURRENCY,
+      items = "[]",
+    } = req.body;
+
+    // Only accept currencies from our own list.
+    const safeCurrency = CURRENCIES.some((item) => item.code === currency)
+      ? currency
+      : DEFAULT_CURRENCY;
 
     const parsedItems = JSON.parse(items);
 
@@ -311,6 +352,7 @@ app.post("/sales/save", requireLogin, async (req, res, next) => {
       vendor: vendor.trim(),
       total,
       tax,
+      currency: safeCurrency,
       items: receiptItems,
     });
 
