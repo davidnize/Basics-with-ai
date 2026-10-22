@@ -1,58 +1,43 @@
-# AI Retail Ledger
+# Snowhite: AI Retail Ledger 🛒
 
-AI Retail Ledger is a small-shop ledger built with technologies I am currently learning:
+A simple web app that helps small shops and local vendors record sales, scan receipts with AI, and manage stock.
 
-- HTML
-- CSS
-- JavaScript
-- EJS
-- Node.js
-- Express
-- PostgreSQL
-- Axios
-- Multer
-- An external AI API
+🌐 **Live Site:** [snowhite-ledger.tech](https://snowhite-ledger.tech/)
 
-## What the app does
+## ✨ Features
 
-- Creates user accounts and logs users in.
-- Uses PostgreSQL to store users, receipts and stock.
-- Uploads a receipt image.
-- Sends the image to Grok through an API request.
-- Displays the vendor, total and items returned by the AI.
-- Saves scanned receipts to the logged-in user's history.
-- Lets users add and view stock batches.
-- Shows low-stock and expiry alerts.
+- **Accounts:** Secure sign-up and login.
+- **AI Receipt Scanning:** Extract vendor, items, total, and tax using Google Gemini.
+- **Sales & History:** Review, edit, and save receipts in multiple currencies.
+- **Inventory Management:** Track stock batches, suppliers, prices, and expiry dates.
+- **FIFO Alerts:** Prioritize older stock and flag low or expiring items.
+- **Mobile-Friendly:** Designed for everyday shop use.
 
-## Learning level
+## 🧰 Tech Stack
 
-The code is intentionally written in a straightforward Node/Express style.
+- **Backend:** Node.js, Express
+- **Frontend:** EJS, HTML, CSS, JavaScript
+- **Database:** PostgreSQL
+- **AI:** Google Gemini API
+- **Hosting:** Render
 
-The project uses real backend concepts such as PostgreSQL, sessions, file uploads,
-API requests and password hashing, but avoids unnecessary architecture and
-abstractions. The goal is that the main application flow can be understood while
-learning backend development.
+## 🚀 Getting Started
 
-React and Go are not used in this project.
-
-## Run locally
-
-1. Create a PostgreSQL database.
-2. Copy `.env.example` to `.env`.
-3. Add your `DATABASE_URL`.
-4. Add your `XAI_API_KEY`.
-5. Install dependencies:
+**Requirements:** Node.js, PostgreSQL, and a Gemini API key.
 
 ```bash
+git clone https://github.com/davidnize/Basics-with-ai.git
+cd Basics-with-ai
 npm install
-```
-
-6. Start the server:
-
-```bash
 npm start
 ```
 
-The PostgreSQL tables are created automatically when the server starts.
+Configure your `.env` file with `DATABASE_URL`, `GEMINI_API_KEY`, and optionally `PORT=3000`.
 
-Never commit `.env`, database credentials or API keys.
+Open `http://localhost:3000` in your browser.
+
+**Note:** Never commit your `.env` file or API keys.
+
+---
+
+Built with ❤️ by the **Snowhite team**.
