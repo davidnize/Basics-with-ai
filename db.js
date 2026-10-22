@@ -8,9 +8,10 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production"
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 // Create the tables the app needs.
@@ -56,7 +57,9 @@ export async function initializeDatabase() {
       selling_price NUMERIC(12, 2),
       supplied_at DATE NOT NULL,
       expires_at DATE
-    );
+
+      );
+      ALTER TABLE receipts ADD COLUMN IF NOT EXISTS tax NUMERIC(12, 2);
   `);
 }
 
@@ -71,7 +74,13 @@ export async function findUserByEmail(email) {
   return result.rows[0];
 }
 
-export async function createUser({ id, name, email, passwordHash, passwordSalt }) {
+export async function createUser({
+  id,
+  name,
+  email,
+  passwordHash,
+  passwordSalt,
+}) {
   const result = await pool.query(
     `INSERT INTO users (id, name, email, password_hash, password_salt)
      VALUES ($1, $2, $3, $4, $5)
@@ -107,16 +116,16 @@ export async function deleteSession(sessionId) {
   await pool.query("DELETE FROM sessions WHERE id = $1", [sessionId]);
 }
 
-export async function createReceipt({ id, userId, vendor, total, items }) {
+export async function createReceipt({ id, userId, vendor, total, tax, items }) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
     await client.query(
-      `INSERT INTO receipts (id, user_id, vendor, total)
-       VALUES ($1, $2, $3, $4)`,
-      [id, userId, vendor, total || null],
+      `INSERT INTO receipts (id, user_id, vendor, total, tax)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, userId, vendor, total || null, tax || null],
     );
 
     for (const item of items) {
@@ -142,6 +151,7 @@ export async function listReceiptsByUser(userId) {
        receipts.id,
        receipts.vendor,
        receipts.total,
+       receipts.tax,
        receipts.created_at AS "createdAt",
        COALESCE(
          json_agg(
