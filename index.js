@@ -218,7 +218,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
     const image = req.file.buffer.toString("base64");
 
     const response = await postWithRetry(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       {
         contents: [
           {
