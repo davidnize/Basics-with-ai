@@ -169,149 +169,53 @@ app.get("/sales", (req, res) => {
 });
 
 // Upload receipt and ask Gemini to read it.
-// app.post("/upload", upload.single("receipt"), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return renderSalesError(res, "Please choose a receipt image.");
-//     }
-
-//     if (!process.env.GEMINI_API_KEY) {
-//       return renderSalesError(
-//         res,
-//         "GEMINI_API_KEY is missing from your environment variables.",
-//         503,
-//       );
-//     }
-
-//     const image = req.file.buffer.toString("base64");
-
-//     const response = await postWithRetry(
-//       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
-//       {
-//         contents: [
-//           {
-//             parts: [
-//               {
-//                 inline_data: {
-//                   mime_type: req.file.mimetype,
-//                   data: image,
-//                 },
-//               },
-//               {
-//                 text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
-//               },
-//             ],
-//           },
-//         ],
-//         generationConfig: {
-//           responseMimeType: "application/json",
-//         },
-//       },
-//       {
-//         headers: {
-//           "x-goog-api-key": process.env.GEMINI_API_KEY,
-//           "Content-Type": "application/json",
-//         },
-//       },
-//     );
-
-//     const parts = response.data.candidates?.[0]?.content?.parts || [];
-
-//     const text = parts
-//       .filter((part) => part.text && !part.thought)
-//       .map((part) => part.text)
-//       .join("");
-
-//     if (!text) {
-//       throw new Error("Gemini returned an empty response.");
-//     }
-
-//     const cleanText = text
-//       .replace(/^```json\s*/i, "")
-//       .replace(/\s*```$/i, "")
-//       .trim();
-
-//     const receipt = JSON.parse(cleanText);
-//     console.log("Parsed receipt:", receipt);
-
-//     res.render("routes/sales.ejs", {
-//       activePage: "sales",
-//       Vendor: receipt.vendor || "",
-//       Total: receipt.total ?? "",
-//       Tax: receipt.tax ?? "",
-//       Items: Array.isArray(receipt.items) ? receipt.items : [],
-//       error: "",
-//     });
-//   } catch (error) {
-//     console.error(
-//       "Receipt scanning failed:",
-//       error.response?.status,
-//       error.response?.data || error.message,
-//     );
-
-//     return renderSalesError(
-//       res,
-//       "We could not read that receipt. Check the server logs.",
-//       502,
-//     );
-//   }
-// });
-// Upload receipt and ask Grok to read it.
 app.post("/upload", upload.single("receipt"), async (req, res) => {
   try {
     if (!req.file) {
       return renderSalesError(res, "Please choose a receipt image.");
     }
 
-    if (!process.env.XAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       return renderSalesError(
         res,
-        "XAI_API_KEY is missing from your environment variables.",
+        "GEMINI_API_KEY is missing from your environment variables.",
         503,
       );
     }
 
     const image = req.file.buffer.toString("base64");
-    const imageUrl = `data:${req.file.mimetype};base64,${image}`;
 
     const response = await postWithRetry(
-      "https://api.x.ai/v1/responses",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       {
-        model: "grok-4.7",
-        input: [
+        contents: [
           {
-            role: "user",
-            content: [
+            parts: [
               {
-                type: "input_image",
-                image_url: imageUrl,
+                inline_data: {
+                  mime_type: req.file.mimetype,
+                  data: image,
+                },
               },
               {
-                type: "input_text",
                 text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
               },
             ],
           },
         ],
-        text: {
-          format: {
-            type: "json_object",
-          },
+        generationConfig: {
+          responseMimeType: "application/json",
         },
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+          "x-goog-api-key": process.env.GEMINI_API_KEY,
           "Content-Type": "application/json",
         },
       },
     );
 
-    const message = response.data.output?.find(
-      (item) => item.type === "message",
-    );
-
-    const parts = message?.content || [];
+    const parts = response.data.candidates?.[0]?.content?.parts || [];
 
     const text = parts
       .filter((part) => part.text && !part.thought)
@@ -319,7 +223,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       .join("");
 
     if (!text) {
-      throw new Error("Grok returned an empty response.");
+      throw new Error("Gemini returned an empty response.");
     }
 
     const cleanText = text
@@ -328,7 +232,6 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       .trim();
 
     const receipt = JSON.parse(cleanText);
-
     console.log("Parsed receipt:", receipt);
 
     res.render("routes/sales.ejs", {
@@ -353,6 +256,103 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
     );
   }
 });
+// Upload receipt and ask Grok to read it.
+// app.post("/upload", upload.single("receipt"), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return renderSalesError(res, "Please choose a receipt image.");
+//     }
+
+//     if (!process.env.XAI_API_KEY) {
+//       return renderSalesError(
+//         res,
+//         "XAI_API_KEY is missing from your environment variables.",
+//         503,
+//       );
+//     }
+
+//     const image = req.file.buffer.toString("base64");
+//     const imageUrl = `data:${req.file.mimetype};base64,${image}`;
+
+//     const response = await postWithRetry(
+//       "https://api.x.ai/v1/responses",
+//       {
+//         model: "grok-4.7",
+//         input: [
+//           {
+//             role: "user",
+//             content: [
+//               {
+//                 type: "input_image",
+//                 image_url: imageUrl,
+//               },
+//               {
+//                 type: "input_text",
+//                 text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
+//               },
+//             ],
+//           },
+//         ],
+//         text: {
+//           format: {
+//             type: "json_object",
+//           },
+//         },
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+//           "Content-Type": "application/json",
+//         },
+//       },
+//     );
+
+//     const message = response.data.output?.find(
+//       (item) => item.type === "message",
+//     );
+
+//     const parts = message?.content || [];
+
+//     const text = parts
+//       .filter((part) => part.text && !part.thought)
+//       .map((part) => part.text)
+//       .join("");
+
+//     if (!text) {
+//       throw new Error("Grok returned an empty response.");
+//     }
+
+//     const cleanText = text
+//       .replace(/^```json\s*/i, "")
+//       .replace(/\s*```$/i, "")
+//       .trim();
+
+//     const receipt = JSON.parse(cleanText);
+
+//     console.log("Parsed receipt:", receipt);
+
+//     res.render("routes/sales.ejs", {
+//       activePage: "sales",
+//       Vendor: receipt.vendor || "",
+//       Total: receipt.total ?? "",
+//       Tax: receipt.tax ?? "",
+//       Items: Array.isArray(receipt.items) ? receipt.items : [],
+//       error: "",
+//     });
+//   } catch (error) {
+//     console.error(
+//       "Receipt scanning failed:",
+//       error.response?.status,
+//       error.response?.data || error.message,
+//     );
+
+//     return renderSalesError(
+//       res,
+//       "We could not read that receipt. Check the server logs.",
+//       502,
+//     );
+//   }
+// });
 
 // Save the scanned receipt.
  // Turn text like "1,234.5" into a number with 2 decimals, or null if empty/invalid.
