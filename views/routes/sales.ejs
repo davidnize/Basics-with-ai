@@ -1,59 +1,155 @@
 <%- include('../partials/header.ejs', { pageTitle: "Sales | AI Retail Ledger" }) %>
 <main class="app-page">
+  <%
+    const taxValue = locals.Tax === undefined || locals.Tax === null ? "" : locals.Tax;
+    const hasResult = Boolean(Vendor || Total || (Items && Items.length));
+    const startSymbol = (currencies.find((c) => c.code === defaultCurrency) || currencies[0]).symbol;
+  %>
   <section class="page-heading"><div><span class="eyebrow">Daily ledger</span><h1>Sales & receipt scanning</h1><p>Record revenue and turn supplier receipts into useful entries.</p></div><span class="page-badge">● Ready to record</span></section>
   <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-  <section class="content-card"><div class="card-heading"><div><h2>Add a receipt</h2><p>Upload an image or use your phone camera. You can review the result before saving it.</p></div></div><div class="action-grid">
+  <section class="content-card"><div class="card-heading"><div><h2>Add a receipt</h2><p>Upload an image or use your phone camera. You can review and edit the result before saving it.</p></div></div><div class="action-grid">
     <form action="/upload" method="POST" enctype="multipart/form-data"><label class="drop"><span class="drop-icon">📁</span><strong>Upload receipt</strong><small>JPG or PNG image</small><input type="file" name="receipt" accept="image/jpeg,image/png" hidden required onchange="this.form.submit()"></label></form>
     <form action="/upload" method="POST" enctype="multipart/form-data"><label class="drop drop-camera"><span class="drop-icon">📷</span><strong>Take a photo</strong><small>Use your device camera</small><input type="file" name="receipt" accept="image/jpeg,image/png" capture="environment" hidden required onchange="this.form.submit()"></label></form>
   </div></section>
+
+  <% if (hasResult) { %>
+  <form id="review-form" class="result-grid" action="/sales/save" method="post">
+    <div class="content-card summary-card">
+      <div class="card-heading"><div><h2>Review receipt</h2><p>Fix anything the scan got wrong before saving.</p></div></div>
+
+      <label class="card-label" for="vendor-input">Supplier / vendor</label>
+      <input id="vendor-input" class="edit-field" type="text" name="vendor" value="<%= Vendor || '' %>" placeholder="Supplier name">
+
+      <label class="card-label" for="currency-select">Currency</label>
+      <select id="currency-select" name="currency" class="edit-field">
+        <% currencies.forEach((c) => { %>
+          <option value="<%= c.code %>" data-symbol="<%= c.symbol %>" <%= c.code === defaultCurrency ? "selected" : "" %>><%= c.symbol %> – <%= c.code %> (<%= c.name %>)</option>
+        <% }) %>
+      </select>
+
+      <label class="card-label" for="tax-input">Tax</label>
+      <div class="money-field"><span data-cur-symbol><%= startSymbol %></span><input id="tax-input" class="edit-field" type="text" inputmode="decimal" name="tax" value="<%= taxValue %>" placeholder="0.00"></div>
+
+      <label class="card-label" for="total-input">Receipt total</label>
+      <div class="money-field"><span data-cur-symbol><%= startSymbol %></span><input id="total-input" class="edit-field" type="text" inputmode="decimal" name="total" value="<%= Total === undefined || Total === null ? '' : Total %>" placeholder="0.00"></div>
+
+      <p id="check-line" class="check-line" aria-live="polite"></p>
+
+      <button class="button save-button" type="submit">Save receipt</button>
+    </div>
+
+    <div class="content-card">
+      <div class="card-heading"><div><h2>Items found</h2><p>Edit a name or price, remove a wrong line, or add one that was missed.</p></div></div>
+      <ul id="item-list" class="edit-list">
+        <% (Items || []).forEach((item) => { %>
+          <li class="edit-row">
+            <input class="edit-field" type="text" name="itemName" value="<%= item.name || '' %>" placeholder="Item name" aria-label="Item name">
+            <input class="edit-field edit-price" type="text" inputmode="decimal" name="itemPrice" value="<%= item.price === undefined || item.price === null ? '' : item.price %>" placeholder="0.00" aria-label="Item price">
+            <button type="button" class="remove-item" aria-label="Remove item">✕</button>
+          </li>
+        <% }) %>
+      </ul>
+      <button type="button" id="add-item" class="button button-secondary add-item">+ Add item</button>
+    </div>
+  </form>
+
+  <template id="item-row-template">
+    <li class="edit-row">
+      <input class="edit-field" type="text" name="itemName" placeholder="Item name" aria-label="Item name">
+      <input class="edit-field edit-price" type="text" inputmode="decimal" name="itemPrice" placeholder="0.00" aria-label="Item price">
+      <button type="button" class="remove-item" aria-label="Remove item">✕</button>
+    </li>
+  </template>
+  <% } else { %>
   <section class="result-grid">
     <div class="content-card summary-card">
-      <%
-        const taxValue = locals.Tax || "";
-        const fmt = (value) => (value === "" || value === null || value === undefined || Number.isNaN(Number(value)))
-          ? "—"
-          : Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const startSymbol = (currencies.find((c) => c.code === defaultCurrency) || currencies[0]).symbol;
-      %>
-      <span class="card-label">Supplier / vendor</span>
-      <strong><%= Vendor || "—" %></strong>
-      <% if (taxValue) { %>
-        <span class="card-label">Tax</span>
-        <strong><span data-cur-symbol><%= startSymbol %></span><%= fmt(taxValue) %></strong>
-      <% } %>
-      <span class="card-label">Receipt total</span>
-      <strong class="total-value"><% if (fmt(Total) !== "—") { %><span data-cur-symbol><%= startSymbol %></span><% } %><%= fmt(Total) %></strong>
-      <% if (Vendor || Total || (Items && Items.length)) { %>
-        <form action="/sales/save" method="post" class="save-form">
-          <label class="card-label" for="currency-select">Currency</label>
-          <select id="currency-select" name="currency" class="currency-select">
-            <% currencies.forEach((c) => { %>
-              <option value="<%= c.code %>" data-symbol="<%= c.symbol %>" <%= c.code === defaultCurrency ? "selected" : "" %>><%= c.symbol %> – <%= c.code %> (<%= c.name %>)</option>
-            <% }) %>
-          </select>
-          <input type="hidden" name="vendor" value="<%= Vendor || '' %>">
-          <input type="hidden" name="total" value="<%= Total || '' %>">
-          <input type="hidden" name="tax" value="<%= taxValue %>">
-          <input type="hidden" name="items" value="<%= JSON.stringify(Items || []) %>">
-          <button class="button save-button" type="submit">Save scanned receipt</button>
-        </form>
-      <% } %>
+      <span class="card-label">Supplier / vendor</span><strong>—</strong>
+      <span class="card-label">Receipt total</span><strong class="total-value">—</strong>
     </div>
-    <div class="content-card"><div class="card-heading"><div><h2>Items found</h2><p>Review the scanned line items before saving.</p></div></div><% if (Items && Items.length) { %><ul class="item-list"><% Items.forEach((item) => { %><li><span><%= item.name %></span><strong><%= item.price %></strong></li><% }); %></ul><% } else { %><div class="empty-state">Your scanned items will appear here.</div><% } %></div>
+    <div class="content-card"><div class="card-heading"><div><h2>Items found</h2><p>Review the scanned line items before saving.</p></div></div><div class="empty-state">Your scanned items will appear here.</div></div>
   </section>
+  <% } %>
 </main>
+
+<% if (hasResult) { %>
 <script>
   (function () {
+    var form = document.getElementById("review-form");
+    var list = document.getElementById("item-list");
+    var template = document.getElementById("item-row-template");
     var select = document.getElementById("currency-select");
-    if (!select) return;
+    var line = document.getElementById("check-line");
+
+    function num(value) {
+      var n = parseFloat(String(value).replace(/,/g, ""));
+      return isFinite(n) ? n : null;
+    }
+
+    function symbol() {
+      return select.options[select.selectedIndex].dataset.symbol;
+    }
+
     function updateSymbols() {
-      var symbol = select.options[select.selectedIndex].dataset.symbol;
-      document.querySelectorAll("[data-cur-symbol]").forEach(function (el) {
-        el.textContent = symbol;
+      var s = symbol();
+      form.querySelectorAll("[data-cur-symbol]").forEach(function (el) {
+        el.textContent = s;
       });
     }
-    select.addEventListener("change", updateSymbols);
+
+    // Tell the user if the items plus tax don't match the receipt total.
+    function updateCheck() {
+      var sum = 0;
+      form.querySelectorAll('input[name="itemPrice"]').forEach(function (input) {
+        var n = num(input.value);
+        if (n !== null) sum += n;
+      });
+
+      var tax = num(form.elements.tax.value) || 0;
+      var total = num(form.elements.total.value);
+
+      if (total === null) {
+        line.textContent = "";
+        line.className = "check-line";
+        return;
+      }
+
+      var calculated = Math.round((sum + tax) * 100) / 100;
+
+      if (Math.abs(calculated - total) < 0.01) {
+        line.textContent = "✓ Items and tax add up to the total.";
+        line.className = "check-line check-ok";
+      } else {
+        line.textContent =
+          "Items + tax = " + symbol() + calculated.toFixed(2) +
+          ", but the total is " + symbol() + total.toFixed(2) + ". Check the amounts.";
+        line.className = "check-line check-warn";
+      }
+    }
+
+    form.addEventListener("input", updateCheck);
+
+    select.addEventListener("change", function () {
+      updateSymbols();
+      updateCheck();
+    });
+
+    document.getElementById("add-item").addEventListener("click", function () {
+      list.appendChild(template.content.cloneNode(true));
+      var names = list.querySelectorAll('input[name="itemName"]');
+      names[names.length - 1].focus();
+    });
+
+    list.addEventListener("click", function (event) {
+      var button = event.target.closest(".remove-item");
+      if (button) {
+        button.closest("li").remove();
+        updateCheck();
+      }
+    });
+
     updateSymbols();
+    updateCheck();
   })();
 </script>
+<% } %>
 <%- include('../partials/footer.ejs') %>

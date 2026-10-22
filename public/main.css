@@ -883,3 +883,77 @@ footer {
     background: #fff;
     margin: 6px 0 12px
 }
+.edit-field {
+    width: 100%;
+    border: 1px solid #ccd6dc;
+    border-radius: 9px;
+    padding: 11px;
+    background: #fff;
+    margin: 6px 0 14px
+}
+
+.edit-field:focus {
+    outline: 3px solid #a7f3d055;
+    border-color: var(--green-600)
+}
+
+.money-field {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.money-field span {
+    font-weight: 800;
+    color: var(--muted);
+    margin-bottom: 8px
+}
+
+.check-line {
+    font-size: .84rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    min-height: 1.2em
+}
+
+.check-ok {
+    color: var(--green-700)
+}
+
+.check-warn {
+    color: var(--amber)
+}
+
+.edit-list {
+    list-style: none
+}
+
+.edit-row {
+    display: grid;
+    grid-template-columns: 1fr 110px auto;
+    gap: 8px;
+    align-items: start
+}
+
+.edit-row .edit-field {
+    margin: 0 0 8px
+}
+
+.remove-item {
+    border: 0;
+    background: #fef2f2;
+    color: #991b1b;
+    border-radius: 9px;
+    width: 40px;
+    height: 41px;
+    cursor: pointer;
+    font-weight: 800
+}
+
+.remove-item:hover {
+    background: #fecaca
+}
+
+.add-item {
+    margin-top: 8px
+}
