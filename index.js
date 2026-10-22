@@ -355,7 +355,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
 // });
 
 // Save the scanned receipt.
-// Turn text like "1,234.5" into a number with 2 decimals, or null if empty/invalid.
+ // Turn text like "1,234.5" into a number with 2 decimals, or null if empty/invalid.
 function toMoney(value) {
   const number = parseFloat(String(value ?? "").replace(/,/g, ""));
   return Number.isFinite(number) ? Math.round(number * 100) / 100 : null;
@@ -381,7 +381,7 @@ app.post("/sales/save", requireLogin, async (req, res, next) => {
     const names = [].concat(req.body.itemName ?? []);
     const prices = [].concat(req.body.itemPrice ?? []);
 
-    console.log("Saving items:", names, prices);
+        console.log("Saving items:", names, prices);
 
     const receiptItems = names
       .map((name, index) => ({
@@ -649,11 +649,9 @@ app.post("/login", async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    const secureFlag = process.env.NODE_ENV === "production" ? "; Secure" : "";
-
     res.setHeader(
       "Set-Cookie",
-      `session=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${secureFlag}`,
+      `session=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800`,
     );
 
     res.redirect("/sales");
