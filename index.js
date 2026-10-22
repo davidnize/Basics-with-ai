@@ -182,6 +182,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       .trim();
 
     const receipt = JSON.parse(cleanText);
+        console.log("Parsed receipt:", receipt);
 
     res.render("routes/sales.ejs", {
       activePage: "sales",
