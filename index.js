@@ -343,14 +343,20 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
 // });
 
 // Save the scanned receipt.
+ // Turn text like "1,234.5" into a number with 2 decimals, or null if empty/invalid.
+function toMoney(value) {
+  const number = parseFloat(String(value ?? "").replace(/,/g, ""));
+  return Number.isFinite(number) ? Math.round(number * 100) / 100 : null;
+}
+
+// Save the receipt, using whatever the user edited on the Sales page.
 app.post("/sales/save", requireLogin, async (req, res, next) => {
   try {
-        const {
+    const {
       vendor = "",
       total = "",
       tax = "",
       currency = DEFAULT_CURRENCY,
-      items = "[]",
     } = req.body;
 
     // Only accept currencies from our own list.
@@ -358,22 +364,27 @@ app.post("/sales/save", requireLogin, async (req, res, next) => {
       ? currency
       : DEFAULT_CURRENCY;
 
-    const parsedItems = JSON.parse(items);
+    // One name and one price per row. A single row arrives as plain text,
+    // so [].concat makes sure we always work with lists.
+    const names = [].concat(req.body.itemName ?? []);
+    const prices = [].concat(req.body.itemPrice ?? []);
 
-    const receiptItems = Array.isArray(parsedItems)
-      ? parsedItems.map((item) => ({
-          id: crypto.randomUUID(),
-          name: item.name,
-          price: item.price,
-        }))
-      : [];
+        console.log("Saving items:", names, prices);
+
+    const receiptItems = names
+      .map((name, index) => ({
+        id: crypto.randomUUID(),
+        name: String(name).trim(),
+        price: toMoney(prices[index]),
+      }))
+      .filter((item) => item.name); // ignore blank rows
 
     await createReceipt({
       id: crypto.randomUUID(),
       userId: res.locals.currentUser.user_id,
       vendor: vendor.trim(),
-      total,
-      tax,
+      total: toMoney(total),
+      tax: toMoney(tax),
       currency: safeCurrency,
       items: receiptItems,
     });
@@ -383,7 +394,6 @@ app.post("/sales/save", requireLogin, async (req, res, next) => {
     next(error);
   }
 });
-
 // --------------------
 // Stock
 // --------------------
