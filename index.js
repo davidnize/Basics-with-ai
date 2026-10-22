@@ -678,9 +678,11 @@ app.post("/logout", async (req, res, next) => {
       await deleteSession(sessionId);
     }
 
+   const secureFlag = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
     res.setHeader(
       "Set-Cookie",
-      "session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
+      `session=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${secureFlag}`,
     );
 
     res.redirect("/");
