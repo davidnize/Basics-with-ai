@@ -18,7 +18,7 @@ A simple web app that helps small shops and local vendors record sales, scan rec
 - **Backend:** Node.js, Express
 - **Frontend:** EJS, HTML, CSS, JavaScript
 - **Database:** PostgreSQL
-- **AI:** Google Gemini API
+- **AI:** Google Gemini API/Grok API(optional)
 - **Hosting:** Render
 
 ## 🚀 Getting Started
