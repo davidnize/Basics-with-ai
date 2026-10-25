@@ -115,7 +115,8 @@
 
       var calculated = Math.round((sum + tax) * 100) / 100;
 
-      if (Math.abs(calculated - total) < 0.01) {
+      // Many receipts (like Shoprite) already include the tax (VAT) in the item prices, so accept that too.
+      if (Math.abs(calculated - total) < 0.01 || Math.abs(sum - total) < 0.01) {
         line.textContent = "✓ Items and tax add up to the total.";
         line.className = "check-line check-ok";
       } else {
