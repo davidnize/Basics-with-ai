@@ -316,7 +316,7 @@ export async function listStockBatchesByUser(userId) {
      FROM stock_batches
      WHERE user_id = $1
      AND quantity > 0
-     ORDER BY supplied_at ASC`,
+     ORDER BY supplied_at ASC, expires_at ASC NULLS LAST`,
     [userId],
   );
 

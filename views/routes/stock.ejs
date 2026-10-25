@@ -55,7 +55,13 @@
           <article class="stock-entry">
             <div><strong><%= batch.productName %></strong><span><%= batch.quantity %> <%= batch.unit %> · <%= batch.supplier || "No supplier" %></span></div>
             <div><span>Supplied <%= formatDate(batch.suppliedAt) %></span><span>Expiry <%= formatDate(batch.expiresAt) %></span></div>
-            <span class="stock-action"><%= index === 0 ? "Sell first" : "" %></span>
+            <%# Old: only the very first batch in the list got "Sell first". Now it's the oldest batch of each product. %>
+            <% const firstOfProduct = batches.findIndex((b) => b.productName.trim().toLowerCase() === batch.productName.trim().toLowerCase()) === index; %>
+            <% const daysLeft = batch.expiresAt ? Math.ceil((new Date(batch.expiresAt) - new Date()) / 86400000) : null; %>
+            <span class="stock-action"><%= firstOfProduct ? "Sell first" : "" %></span>
+            <% if (daysLeft !== null && daysLeft <= 7) { %>
+              <span class="stock-action" style="color:#b42318;"><%= daysLeft < 0 ? "Expired" : "Expires in " + daysLeft + " day" + (daysLeft === 1 ? "" : "s") %></span>
+            <% } %>
             <div class="entry-buttons">
               <form action="/stock/<%= batch.id %>/delete" method="post" onsubmit="return confirm('Delete this stock batch?')">
                 <button class="button button-small button-danger" type="submit">Delete</button>
