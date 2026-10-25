@@ -58,7 +58,7 @@
             <%# Old: only the very first batch in the list got "Sell first". Now it's the oldest batch of each product. %>
             <% const firstOfProduct = batches.findIndex((b) => b.productName.trim().toLowerCase() === batch.productName.trim().toLowerCase()) === index; %>
             <% const daysLeft = batch.expiresAt ? Math.ceil((new Date(batch.expiresAt) - new Date()) / 86400000) : null; %>
-            <span class="stock-action"><%= firstOfProduct ? "Sell first" : "" %></span>
+            <span class="stock-action"><span><%= index === 0 ? "Sell first" : "" %></span>
             <% if (daysLeft !== null && daysLeft <= 7) { %>
               <span class="stock-action" style="color:#b42318;"><%= daysLeft < 0 ? "Expired" : "Expires in " + daysLeft + " day" + (daysLeft === 1 ? "" : "s") %></span>
             <% } %>
