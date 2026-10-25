@@ -12,7 +12,7 @@ import {
   createSession,
   deleteSession,
   createReceipt,
-    listReceiptsByUser,
+  listReceiptsByUser,
   findReceipt,
   updateReceipt,
   deleteReceipt,
@@ -230,7 +230,7 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
                 },
               },
               {
-                text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","price":0}]}. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
+                text: 'Read this receipt. Reply with only JSON: {"vendor":"","total":0,"tax":0,"items":[{"name":"","quantity":1,"unit_price":0,"price":0}]}. "quantity" is how many units were bought on that line, for example a line like "2 @ K12.99" means quantity 2. "unit_price" is the price of ONE unit. "price" is the line total printed on the right (quantity x unit_price). If no quantity is printed, use quantity 1 and set unit_price equal to price. List each product once, and never list a "2 @ K12.99" line as its own item. "tax" is the total tax, VAT or service fee printed on the receipt, or 0 if there is none. Do not list tax as an item.',
               },
             ],
           },
