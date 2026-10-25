@@ -808,7 +808,8 @@ footer {
     border-radius: 12px;
     padding: 16px;
     display: grid;
-    grid-template-columns: 1fr 1fr 110px auto;
+    /* was: grid-template-columns: 1fr 1fr 110px auto; */
+    grid-template-columns: 1.2fr 1fr auto auto;
     align-items: center;
     gap: 16px
 }
@@ -882,6 +883,36 @@ footer {
     background: #fef2f2
 }
 
+/* Stock card: badges on one line each, Delete + Edit side by side on the right */
+.stock-entry .stock-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    white-space: nowrap
+}
+
+.stock-entry .stock-action span:last-child:not(:first-child) {
+    color: #b42318
+}
+
+.stock-entry .entry-buttons {
+    justify-self: end
+}
+
+.stock-entry .edit-box {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+    margin-left: 90px
+}
+
+.stock-entry .edit-box[open] {
+    grid-column: 1/-1;
+    grid-row: auto;
+    margin-left: 0
+}
+
 @media(max-width:760px) {
     .stock-form {
         grid-template-columns: 1fr
@@ -897,6 +928,18 @@ footer {
 
     .stock-action {
         justify-self: start
+    }
+
+    .stock-entry .stock-action {
+        align-items: flex-start
+    }
+
+    .stock-entry .entry-buttons,
+    .stock-entry .edit-box {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        margin-left: 0
     }
 
     .stock-action:empty {
@@ -1012,16 +1055,4 @@ footer {
 
 .add-item {
     margin-top: 8px
-}
-
-/* Expiry badge sits under "Sell first" instead of taking its own column */
-.stock-entry {
-  position: relative;
-}
-
-.stock-entry .stock-action + .stock-action {
-  position: absolute;
-  top: 44px;
-  right: 130px;
-  color: #b42318 !important;
 }
