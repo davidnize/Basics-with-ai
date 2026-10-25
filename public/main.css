@@ -1013,3 +1013,15 @@ footer {
 .add-item {
     margin-top: 8px
 }
+
+/* Expiry badge sits under "Sell first" instead of taking its own column */
+.stock-entry {
+  position: relative;
+}
+
+.stock-entry .stock-action + .stock-action {
+  position: absolute;
+  top: 44px;
+  right: 130px;
+  color: #b42318 !important;
+}
