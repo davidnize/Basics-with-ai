@@ -271,7 +271,8 @@ app.post("/upload", upload.single("receipt"), async (req, res) => {
       Vendor: receipt.vendor || "",
       Total: receipt.total ?? "",
       Tax: receipt.tax ?? "",
-      Items: Array.isArray(receipt.items) ? receipt.items : [],
+      // Put the quantity into the item name, e.g. "COCA COLA 500ML x2". The price stays the line total.
+      Items: Array.isArray(receipt.items) ? receipt.items.map((item) => ({ ...item, name: Number(item.quantity) > 1 ? `${item.name} x${Number(item.quantity)}` : item.name })) : [],
       error: "",
     });
   } catch (error) {
